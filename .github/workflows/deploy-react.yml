@@ -60,4 +60,7 @@ jobs:
           git config --global user.email "actions@github.com"
           git add -A
           git commit -m "Update from React build" || echo "No changes to commit"
-          git push
+          
+          # Use the PAT token for push authentication
+          git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git
+          git push origin main
