@@ -15,7 +15,7 @@ on:
       build_folder:
         description: 'Folder containing the build files'
         required: true
-        default: 'build'
+        default: 'dist'
 
 jobs:
   deploy:
