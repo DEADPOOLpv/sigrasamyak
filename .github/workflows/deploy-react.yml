@@ -1,0 +1,56 @@
+name: Deploy to sigrasamyak.com
+
+on:
+  # Trigger manually
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: 'Source repository with React build'
+        required: true
+        default: 'YourUsername/source-repo-name' # Replace with your actual source repo
+      source_branch:
+        description: 'Branch containing the build'
+        required: true
+        default: 'main'
+      build_folder:
+        description: 'Folder containing the build files'
+        required: true
+        default: 'build'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v3
+        
+      - name: Checkout source repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.inputs.source_repo }}
+          ref: ${{ github.event.inputs.source_branch }}
+          path: source-repo
+          token: ${{ secrets.PAT_TOKEN }} # You'll need to set up this secret if the source repo is private
+          
+      - name: Copy build files to root
+        run: |
+          # Remove everything except .git, workflow files, and CNAME
+          find . -maxdepth 1 -not -path "./source-repo" -not -path "./.git" -not -path "./.github" -not -path "." -not -name "CNAME" | xargs rm -rf
+          
+          # Copy build files from source repository
+          cp -r source-repo/${{ github.event.inputs.build_folder }}/* .
+          
+          # Clean up source repository
+          rm -rf source-repo
+          
+      - name: Ensure CNAME file exists
+        run: |
+          echo "sigrasamyak.com" > CNAME
+      
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add -A
+          git commit -m "Update from React build" || echo "No changes to commit"
+          git push
