@@ -1,27 +1,23 @@
-name: Deploy to sigrasamyak.com
+name: Build and Deploy to sigrasamyak.com
 
 on:
   # Trigger manually
   workflow_dispatch:
     inputs:
       source_repo:
-        description: 'Source repository with React build'
+        description: 'Source repository with React code'
         required: true
-        default: 'DEADPOOLpv/SigraSamyakWebsite' # Replace with your actual source repo
+        default: 'YourUsername/source-repo-name'
       source_branch:
-        description: 'Branch containing the build'
+        description: 'Branch containing the source code'
         required: true
         default: 'main'
-      build_folder:
-        description: 'Folder containing the build files'
-        required: true
-        default: 'dist'
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout current repository
+      - name: Checkout current repository (GitHub Pages repo)
         uses: actions/checkout@v3
         
       - name: Checkout source repository
@@ -30,7 +26,18 @@ jobs:
           repository: ${{ github.event.inputs.source_repo }}
           ref: ${{ github.event.inputs.source_branch }}
           path: source-repo
-          token: ${{ secrets.PAT_TOKEN }} # You'll need to set up this secret if the source repo is private
+          token: ${{ secrets.PAT_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install and Build
+        working-directory: ./source-repo
+        run: |
+          npm ci
+          npm run build
           
       - name: Copy build files to root
         run: |
@@ -38,7 +45,7 @@ jobs:
           find . -maxdepth 1 -not -path "./source-repo" -not -path "./.git" -not -path "./.github" -not -path "." -not -name "CNAME" | xargs rm -rf
           
           # Copy build files from source repository
-          cp -r source-repo/${{ github.event.inputs.build_folder }}/* .
+          cp -r source-repo/dist/* .
           
           # Clean up source repository
           rm -rf source-repo
@@ -46,7 +53,7 @@ jobs:
       - name: Ensure CNAME file exists
         run: |
           echo "sigrasamyak.com" > CNAME
-      
+        
       - name: Commit and push changes
         run: |
           git config --global user.name "GitHub Actions"
