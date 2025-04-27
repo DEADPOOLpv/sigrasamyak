@@ -7,7 +7,7 @@ on:
       source_repo:
         description: 'Source repository with React build'
         required: true
-        default: 'YourUsername/source-repo-name' # Replace with your actual source repo
+        default: 'DEADPOOLpv/SigraSamyakWebsite' # Replace with your actual source repo
       source_branch:
         description: 'Branch containing the build'
         required: true
